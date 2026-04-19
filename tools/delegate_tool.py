@@ -76,7 +76,8 @@ def _get_persona_config(persona: Optional[str]) -> dict:
         return {}
     try:
         cfg = _load_config()
-        return dict(cfg.get("personas", {}).get(persona, {}))
+        raw = cfg.get("personas", {}).get(persona, {})
+        return dict(raw) if isinstance(raw, dict) else {}
     except Exception as e:
         logger.debug("Could not load persona config for '%s': %s", persona, e)
         return {}
