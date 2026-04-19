@@ -407,7 +407,9 @@ def _build_child_agent(
     # This allows users to override model and max_tokens per persona without
     # touching source code — changes take effect on the next delegate_task call.
     persona_cfg = _get_persona_config(persona)
-    persona_model_override = str(persona_cfg.get("model") or "").strip()
+    # "auto" means inherit from parent — treat same as unset
+    _raw_model = str(persona_cfg.get("model") or "").strip()
+    persona_model_override = "" if _raw_model.lower() == "auto" else _raw_model
     persona_max_tokens = persona_cfg.get("max_tokens")
     if persona_max_tokens is not None:
         try:
@@ -419,7 +421,8 @@ def _build_child_agent(
             )
             persona_max_tokens = None
 
-    # Resolve effective credentials: config override > persona override > parent inherit
+    # Resolve effective model: caller override > persona override > parent inherit
+    # "auto" persona model and empty string both fall through to parent model.
     effective_model = model or persona_model_override or parent_agent.model
     if persona_model_override and not model:
         logger.debug("Persona '%s' → model override: %s", persona, persona_model_override)
